@@ -11,7 +11,7 @@ server.use(express.json());
 
 server.use('/users', logger, userRouter);
 
-server.use('/', logger, (req, res) => {
+server.get('/', logger, (req, res) => {
   res.status(200).send('base route')
 });
 
