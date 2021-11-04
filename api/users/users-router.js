@@ -9,60 +9,66 @@ const {logger , validateUserId, validateUser, validatePost} = require('../middle
 
 
 
-router.get('/', async (req, res) => {
+router.get('/',  (req, res) => {
   // RETURN AN ARRAY WITH ALL THE USERS
-  try{
-    console.log('started')
-    const users = await usersModel.get(users)
-    res.status(200).json(users)
-  } catch (error) {
-    res.status(500).json({ message: "The users' information could not be retrieved" })
-  }
+  // try{
+  //   console.log('started')
+  //   const users = await usersModel.get(users)
+  //   res.status(200).json(users)
+  // } catch (error) {
+  //   res.status(500).json({ message: "The users' information could not be retrieved" })
+  // }
+
+  usersModel.get()
+    .then(users => {
+      res.json(users)
+  }) 
+    .catch(next)
 })
-//   usersModel.get()
-//     .then(users => {
-//       res.status(200).json(users)
-//   }) 
-//     .catch((err) => res.status(500).json({ message: err}));
-// })
 
 router.get('/:id', validateUserId, (req, res) => {
   // RETURN THE USER OBJECT
   // this needs a middleware to verify user id
-  usersModel.getById(req.params.id)
-  .then((user) => {
-    if (user) {
-      res.status(200).json(user);
-    } else {
-      res.status(404).json({message: 'user could not be retrieved' });
-    }
-  })
-  .catch((err) => {
-    res.status(500).json({ message: err })
-  })
-});
+//   usersModel.getById(req.params.id)
+//   .then((user) => {
+//     if (user) {
+//       res.status(200).json(user);
+//     } else {
+//       res.status(404).json({message: 'user could not be retrieved' });
+//     }
+//   })
+//   .catch((err) => {
+//     res.status(500).json({ message: err })
+//   })
+// });
+res.json(req.user)
+})
 
 router.post('/', validateUser, (req, res) => {
   // RETURN THE NEWLY CREATED USER OBJECT
   // this needs a middleware to check that the request body is valid
-  usersModel.insert(req.body)
-    .then((data) => {
-      res.status(201).json({ id: data.id, name: req.body.name });
+  usersModel.insert({name: req.name})
+    .then((newUser) => {
+      res.status(201).json({ newUser });
     })
-    .catch(() => {
-      res.status(500).json({ message: "There was an error while adding the user to the database" })
-    })
-});
-
+    .catch(next)
+    });
+// console.log(req.name)
+// })
 router.put('/:id', validateUserId, validateUser, async (req, res) => {
   // RETURN THE FRESHLY UPDATED USER OBJECT
   // this needs a middleware to verify user id
   // and another middleware to check that the request body is valid
-  usersModel.update(id, req.body)
-    .then((updatedUser) => {
-      usersModel.getById(id).then((updatedUser) => { res.status(200).json(updatedUser) })
-      console.log(updatedUser, "updated user")
+  usersModel.update(req.params.id, {name: req.name })
+    .then(() => {
+      return usersModel.getById(req.params.id) 
     })
+      .then(user => {
+        res.json(user)
+      })
+      .catch(next)
+  // console.log(req.user)
+  // console.log(req.name)
 });
 
 router.delete('/:id', validateUserId, async (req, res) => {
@@ -70,10 +76,11 @@ router.delete('/:id', validateUserId, async (req, res) => {
   // this needs a middleware to verify user id
   try {
     await usersModel.remove(req.params.id)
-    res.status(200).json(usersModel.getById(id))
-  } catch (error) {
-    res.status(500).json({ message: "The user could not be deleted"})
+    res.json(req.user)
+  } catch (err) {
+    next(err)
   }
+// console.log(req.user)
 });
 
 router.get('/:id/posts', validateUserId, async (req, res) => {
@@ -81,22 +88,31 @@ router.get('/:id/posts', validateUserId, async (req, res) => {
   // this needs a middleware to verify user id
   try {
     const usersPost = await usersModel.getUserPosts(req.params.id)
-    res.status(200).json(usersPost)
-  } catch {
-    res.status(500).json({ message: "The post could not be retrieved" })
+    res.json(usersPost)
+  } catch (err) {
+    next(err)
   }
+  // console.log(req.user)
 });
 
-router.post('/:id/posts', validateUserId, validatePost, (req, res) => {
+router.post('/:id/posts', validateUserId, validatePost, async (req, res) => {
   // RETURN THE NEWLY CREATED USER POST
   // this needs a middleware to verify user id
   // and another middleware to check that the request body is valid
-  postsModel.insert(req.params.id)
+  try {const newPost = postsModel.insert({user_id: req.params.id, text: req.text, })
   .then((data) => {
-    res.status(200).json(data)
-  })
-  .catch(() => {
-    res.status(500).json({ message: "The created post could not be saved" })
+    res.status(200).json(newPost)
+  })}
+  catch (err) {
+    next(err)
+  }
+  // console.log(req.user)
+  // console.log(req.text)
+});
+
+router.use((err, req, res, next) => {
+  res.status(err.status || 500).json({
+    message: "error in posts router"
   })
 });
 

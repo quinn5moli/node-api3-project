@@ -9,10 +9,11 @@ server.use(express.json());
 
 // global middlewares and the user's router need to be connected here
 
-server.use('/users', logger, userRouter);
+server.use(logger);
+server.use('/api/users', userRouter)
 
 server.get('/', logger, (req, res) => {
-  res.status(200).send('base route')
+  res.send('Time to write some middleware!')
 });
 
 module.exports = server;
