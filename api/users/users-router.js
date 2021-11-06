@@ -23,7 +23,7 @@ router.get('/',  (req, res) => {
     .then(users => {
       res.json(users)
   }) 
-    .catch(next)
+    .catch(() => res.status(500).jsin({ message: "server error "}))
 })
 
 router.get('/:id', validateUserId, (req, res) => {
@@ -51,7 +51,7 @@ router.post('/', validateUser, (req, res) => {
     .then((newUser) => {
       res.status(201).json({ newUser });
     })
-    .catch(next)
+    .catch(()=> res.status(500).json({ message: "server error" }));
     });
 // console.log(req.name)
 // })
@@ -66,7 +66,7 @@ router.put('/:id', validateUserId, validateUser, async (req, res) => {
       .then(user => {
         res.json(user)
       })
-      .catch(next)
+      .catch(() => res.status(500).json({ message: "server error" }))
   // console.log(req.user)
   // console.log(req.name)
 });

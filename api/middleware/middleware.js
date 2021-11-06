@@ -11,7 +11,7 @@ async function validateUserId(req, res, next) {
   try {
     const user = await model.getById(req.params.id)
     if (!user) {
-      next({status:404 ,message: 'user not found' })
+      ({status:404 ,message: 'user not found' })
     } else {
       req.user = user
       next()
